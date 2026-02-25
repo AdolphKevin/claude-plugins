@@ -1,0 +1,13 @@
+{
+  "name": "claude-plugins",
+  "owner": {
+    "name": "AdolphKevin"
+  },
+  "plugins": [
+    {
+      "name": "git-commit",
+      "source": "./plugins/git-commit",
+      "description": "Generate a clean commit with a well-formatted message, auto-update CHANGELOG, and track documentation consistency"
+    }
+  ]
+}
