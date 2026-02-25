@@ -1,4 +1,4 @@
-# Claude Plugins Marketplace
+# AdolphKevin Tools Marketplace
 
 ## 安装
 
@@ -7,7 +7,7 @@
 /plugin marketplace add AdolphKevin/claude-plugins
 
 # 安装插件
-/plugin install git-commit@claude-plugins
+/plugin install git-commit@adolphkevin-tools
 ```
 
 ## 安装后设置
@@ -17,17 +17,17 @@
 ```bash
 # 创建软链接（只需执行一次）
 mkdir -p ~/.claude/skills
-ln -sf ~/.claude/plugins/cache/claude-plugins/plugins/git-commit/skills/git-commit/scripts/log_change.py ~/.claude/skills/log_change.py
+ln -sf ~/.claude/plugins/cache/adolphkevin-tools/plugins/git-commit/skills/git-commit/scripts/log_change.py ~/.claude/skills/log_change.py
 ```
 
 或者直接在命令中使用完整路径：
 
 ```bash
-python ~/.claude/plugins/cache/claude-plugins/plugins/git-commit/skills/git-commit/scripts/log_change.py <type> <summary> <risk_analysis>
+python ~/.claude/plugins/cache/adolphkevin-tools/plugins/git-commit/skills/git-commit/scripts/log_change.py <type> <summary> <risk_analysis>
 ```
 
 ## 更新插件
 
 ```bash
-/plugin update git-commit@claude-plugins
+/plugin update git-commit@adolphkevin-tools
 ```
