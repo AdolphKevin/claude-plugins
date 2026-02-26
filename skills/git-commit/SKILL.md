@@ -1,17 +1,25 @@
 ---
 name: git-commit
-description: Generate a clean commit with a well-formatted message, auto-update CHANGELOG, and track documentation consistency
+description: Generate clean commits with well-formatted messages, auto-update AI_CHANGELOG, and validate documentation consistency. Use this skill whenever committing code changes.
 ---
 
 # Commit Current Changes
 
-Generates a clean commit with a properly formatted message, optionally auto-updates CHANGELOG, and validates documentation consistency.
+Generates a clean commit with a properly formatted message, automatically updates AI_CHANGELOG, and validates documentation consistency on every run.
 
 ## Usage
 
 ```bash
-/git-commit                           # Auto-generate commit message
+/git-commit                           # Auto-generate commit message, update AI_CHANGELOG, check docs
 ```
+
+**Note**: Simply run `/git-commit` with no arguments. The command automatically:
+
+1. Checks staged changes
+2. Analyzes the changes
+3. **Automatically runs log_change.py to record in AI_CHANGELOG**
+4. **Checks documentation consistency**
+5. Generates commit message and creates the commit
 
 ## Available Types
 
@@ -41,7 +49,7 @@ Generates a clean commit with a properly formatted message, optionally auto-upda
 
 ## Documentation Consistency Check
 
-**Trigger**: Any commit that modifies code files (`.go`, `.ts`, `.tsx`, `.js`, `.py`, etc.)
+**Trigger**: Always runs on every commit that modifies code files (`.go`, `.ts`, `.tsx`, `.js`, `.py`, etc.)
 
 **Check Rules**:
 | Code Changed | Documentation Status     | Action                                                 |
@@ -79,17 +87,17 @@ Body explaining the changes in detail.
 The command will:
 1. Check if there are staged changes
 2. Analyze the changes and generate a meaningful commit message
-3. **Check documentation consistency** (if --check-docs or by default for code changes)
-4. **Update AI_CHANGELOG.md** 
-5. **IMPORTANT**: If using Flight Recorder, stage AI_CHANGELOG.md together with code BEFORE commit
+3. **Automatically run log_change.py to update AI_CHANGELOG.md**
+4. **Check documentation consistency** (always enabled for code changes)
+5. Stage AI_CHANGELOG.md together with your code files
 6. Show the commit message for confirmation (unless --dry-run)
-7. Create the commit with clean formatting (including AI_CHANGELOG.md if used)
+7. Create the commit with clean formatting (including AI_CHANGELOG.md)
 8. Show a summary of what was committed
 9. **NEVER add any Co-Authored-By or AI signatures**. The commit message should only contain the change description, nothing else.
 
 ## Red Flags - STOP and Reconsider
 
-- Ignoring --check-docs warnings "I'll update docs later"
+- Ignoring documentation warnings with "I'll update docs later"
 - Committing breaking API changes without documentation
 - Adding new features without considering if docs need updates
 
@@ -112,64 +120,50 @@ When repository has GitHub integration:
 
 ---
 
-# Automatic Flight Recording (自动飞行记录仪)
+# Automatic Flight Recording
 
-## Rule: Record BEFORE Commit (not after!)
+## Rule: Automatic Recording
 
-**CORRECT ORDER**:
-1. Write your code changes
-2. **Run log_change.py** to record the change in AI_CHANGELOG.md
-3. **Stage AI_CHANGELOG.md** together with your code files: `git add docs/AI_CHANGELOG.md`
-4. **Commit together**: `git commit -m "..."`
+**Everything happens automatically when you run `/git-commit`**:
+1. Analyzes staged changes
+2. Automatically determines change type and summary
+3. Automatically runs log_change.py to record in AI_CHANGELOG.md
+4. Automatically stages AI_CHANGELOG.md
+5. Creates a single commit containing both code and changelog
 
-**WRONG ORDER (❌)**: Commit first, then record - this creates separate commits!
-
-**WHEN** you have successfully modified any code logic (Feature, Bugfix, or Refactor):
-
-1. **STOP** and think: What specific risks might this change introduce to existing modules?
-2. **EXECUTE** the `{SKILL_DIR}/scripts/log_change.py` script FIRST.
-3. **Stage AI_CHANGELOG.md** with your code: `git add docs/AI_CHANGELOG.md`
-4. **Commit together**: One commit contains both code and change log.
-
-**GOAL**: Ensure `docs/AI_CHANGELOG.md` is always committed WITH your code changes.
+**Just run `/git-commit` - everything else is automatic!**
 
 ## Flight Recorder Command
 
 **Script Location**: `{SKILL_DIR}/scripts/log_change.py` (shared across all projects)
 
 ```bash
-# Step 1: Record the change FIRST
-python {SKILL_DIR}/scripts/log_change.py <type> <summary> <risk_analysis>
+# Just run this one command!
+/git-commit
 
-# Step 2: Stage AI_CHANGELOG.md together with your code
-git add docs/AI_CHANGELOG.md
-git add <your-code-files>
-
-# Step 3: Commit together
-git commit -m "Your commit message"
-
-# Example:
-python {SKILL_DIR}/scripts/log_change.py Feature "Add timeline index optimization" "May affect existing queries performance"
-git add docs/AI_CHANGELOG.md protos/conversation/conversation.proto
-git commit -m "feat(conversation): Add timeline message jump support"
+# Internally executes:
+# 1. Analyzes staged changes
+# 2. Generates change type and summary
+# 3. Runs log_change.py to record change
+# 4. Stages AI_CHANGELOG.md
+# 5. Creates commit
 ```
 
 ## Correct Commit Flow
 
 ```
 1. Modify code files
-2. Run: python {SKILL_DIR}/scripts/log_change.py Feature "Add feature" "Risk..."
-3. Run: git add docs/AI_CHANGELOG.md <your-files>
-4. Run: git commit -m "feat: Add feature"
+2. Run: /git-commit
    ↓
 Single commit contains:
   - Your code changes
   - AI_CHANGELOG.md entry
+  - Documentation consistency check
 ```
 
 ## ChangeLog Format
 
-The script generates entries in this format:
+Auto-generated entry format:
 ```markdown
 ## [2026-02-25 14:31] [Feature] ✨
 
@@ -181,9 +175,9 @@ The script generates entries in this format:
 
 ## AI_CHANGELOG.md Location
 
-- **Path**: `docs/AI_CHANGELOG.md` (in each project directory where you run the script)
-- **Generated by**: `{SKILL_DIR}/scripts/log_change.py`
-- **Commit with**: Always commit this file along with your code changes
+- **Path**: `docs/AI_CHANGELOG.md` (in each project directory)
+- **Generated by**: `{SKILL_DIR}/scripts/log_change.py` (runs automatically)
+- **Commit with**: Automatically committed with your code
 
 ## Why Risk Analysis Matters
 

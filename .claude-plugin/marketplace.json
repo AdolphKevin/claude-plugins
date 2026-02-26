@@ -6,8 +6,10 @@
   "plugins": [
     {
       "name": "git-commit",
-      "source": "./skills/git-commit",
-      "description": "Generate a clean commit with a well-formatted message, auto-update CHANGELOG, and track documentation consistency"
+      "source": "./",
+      "skills": [
+        "./skills/git-commit"
+      ]
     }
   ]
 }
