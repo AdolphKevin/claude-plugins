@@ -1,4 +1,11 @@
 
+## [2026-03-19 18:58] [Feature] ✨
+
+- **Change**: Add documenting-system-architecture skill for creating Mermaid architecture diagrams
+- **Risk Analysis**: Documentation-only change, safe to merge
+
+---
+
 ## [2026-03-19 18:56] [Docs] 📝
 
 - **Change**: Add data-security-compliance skill for code security review
