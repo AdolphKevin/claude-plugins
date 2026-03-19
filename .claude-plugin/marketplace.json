@@ -6,28 +6,28 @@
   "plugins": [
     {
       "name": "git-commit",
-      "source": "./",
+      "source": "./skills/git-commit",
       "skills": [
         "./skills/git-commit"
       ]
     },
     {
       "name": "spec-verified-implementation",
-      "source": "./",
+      "source": "./skills/spec-verified-implementation",
       "skills": [
         "./skills/spec-verified-implementation"
       ]
     },
     {
       "name": "documenting-system-architecture",
-      "source": "./",
+      "source": "./skills/documenting-system-architecture",
       "skills": [
         "./skills/documenting-system-architecture"
       ]
     },
     {
       "name": "data-security-compliance",
-      "source": "./",
+      "source": "./skills/data-security-compliance",
       "skills": [
         "./skills/data-security-compliance"
       ]
