@@ -10,6 +10,27 @@
       "skills": [
         "./skills/git-commit"
       ]
+    },
+    {
+      "name": "spec-verified-implementation",
+      "source": "./",
+      "skills": [
+        "./skills/spec-verified-implementation"
+      ]
+    },
+    {
+      "name": "documenting-system-architecture",
+      "source": "./",
+      "skills": [
+        "./skills/documenting-system-architecture"
+      ]
+    },
+    {
+      "name": "data-security-compliance",
+      "source": "./",
+      "skills": [
+        "./skills/data-security-compliance"
+      ]
     }
   ]
 }
