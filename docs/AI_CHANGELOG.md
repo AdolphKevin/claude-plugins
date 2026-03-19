@@ -1,4 +1,18 @@
 
+## [2026-03-19 18:56] [Docs] 📝
+
+- **Change**: Add data-security-compliance skill for code security review
+- **Risk Analysis**: New skill document - no production code changes
+
+---
+
+## [2026-03-19 18:56] [Docs] 📝
+
+- **Change**: Add data-security-compliance skill for code security review
+- **Risk Analysis**: New skill document - no production code changes
+
+---
+
 ## [2026-03-19 18:52] [Feature] ✨
 
 - **Change**: Add spec-verified-implementation skill for gap analysis
