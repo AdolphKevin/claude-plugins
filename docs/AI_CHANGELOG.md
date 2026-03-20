@@ -1,4 +1,11 @@
 
+## [2026-03-20 18:35] [Refactor] ♻️
+
+- **Change**: Improve log_change.py directory handling and code structure
+- **Risk Analysis**: Safe refactor - no functional changes, only improves script maintainability and adds --dir flag for cross-project usage
+
+---
+
 ## [2026-03-19 19:02] [Feature] ✨
 
 - **Change**: Add new plugin entries to marketplace

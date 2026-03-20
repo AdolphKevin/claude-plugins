@@ -16,6 +16,7 @@ Example (positional):
 Example (flags):
     python log_change.py --type Feature --change "Add timeline index optimizationMay affect existing queries" --risk " performance"
 """
+
 import sys
 import os
 import argparse
@@ -37,7 +38,7 @@ def find_project_root(start_dir: str = ".") -> str:
             cwd=start_dir,
             capture_output=True,
             text=True,
-            timeout=5
+            timeout=5,
         )
         if result.returncode == 0:
             return result.stdout.strip()
@@ -60,15 +61,23 @@ def find_project_root(start_dir: str = ".") -> str:
     return start_dir
 
 
-def get_changelog_path() -> str:
-    """获取 CHANGELOG 文件的完整路径"""
-    # 首先检查当前目录
-    current_dir = "."
-    if os.path.exists(os.path.join(current_dir, CHANGELOG_SUBDIR, CHANGELOG_FILENAME)):
-        return os.path.join(current_dir, CHANGELOG_SUBDIR, CHANGELOG_FILENAME)
+def get_changelog_path(start_dir=None) -> str:
+    """获取 CHANGELOG 文件的完整路径
+
+    Args:
+        start_dir: 搜索起点目录，默认为脚本所在目录的父目录
+    """
+    if start_dir is None:
+        # 默认使用脚本所在目录的父目录（支持跨项目使用）
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        start_dir = os.path.dirname(script_dir)
+
+    # 首先检查 start_dir
+    if os.path.exists(os.path.join(start_dir, CHANGELOG_SUBDIR, CHANGELOG_FILENAME)):
+        return os.path.join(start_dir, CHANGELOG_SUBDIR, CHANGELOG_FILENAME)
 
     # 向上查找项目根目录
-    root = find_project_root(current_dir)
+    root = find_project_root(start_dir)
     changelog_path = os.path.join(root, CHANGELOG_SUBDIR, CHANGELOG_FILENAME)
 
     if os.path.exists(changelog_path):
@@ -76,6 +85,7 @@ def get_changelog_path() -> str:
 
     # 文件不存在，返回默认路径（会在追加时创建）
     return os.path.join(root, CHANGELOG_SUBDIR, CHANGELOG_FILENAME)
+
 
 # 变更类型
 CHANGE_TYPES = ["Feature", "Bugfix", "Refactor", "Critical-Fix", "Docs", "Perf"]
@@ -89,7 +99,7 @@ def get_change_type_display(change_type: str) -> str:
         "Refactor": "♻️",
         "Critical-Fix": "🚨",
         "Docs": "📝",
-        "Perf": "⚡"
+        "Perf": "⚡",
     }
     emoji = emoji_map.get(change_type, "📦")
     return f"[{change_type}] {emoji}"
@@ -97,7 +107,7 @@ def get_change_type_display(change_type: str) -> str:
 
 def format_entry(change_type: str, summary: str, risk_analysis: str) -> str:
     """格式化日志条目"""
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     type_display = get_change_type_display(change_type)
 
     entry = f"""
@@ -111,7 +121,9 @@ def format_entry(change_type: str, summary: str, risk_analysis: str) -> str:
     return entry
 
 
-def append_log(change_type: str, summary: str, risk_analysis: str) -> bool:
+def append_log(
+    change_type: str, summary: str, risk_analysis: str, start_dir=None
+) -> bool:
     """追加日志到 AI_CHANGELOG.md（ prepend 到文件开头）"""
     # 验证变更类型
     if change_type not in CHANGE_TYPES:
@@ -125,14 +137,16 @@ def append_log(change_type: str, summary: str, risk_analysis: str) -> bool:
         return False
 
     if not risk_analysis or not risk_analysis.strip():
-        print("❌ Error: Risk analysis cannot be empty - this is the most important field!")
+        print(
+            "❌ Error: Risk analysis cannot be empty - this is the most important field!"
+        )
         return False
 
     # 创建格式化的日志条目
     entry = format_entry(change_type, summary.strip(), risk_analysis.strip())
 
     # 获取 CHANGELOG 文件路径
-    changelog_path = get_changelog_path()
+    changelog_path = get_changelog_path(start_dir)
     changelog_dir = os.path.dirname(changelog_path)
 
     try:
@@ -179,13 +193,31 @@ def main():
     parser = argparse.ArgumentParser(
         description="AI_CHANGELOG 自动飞行记录仪",
         usage="python log_change.py <type> <summary> <risk_analysis>\n       python log_change.py --type <type> --change <summary> --risk <risk_analysis>",
-        add_help=False
+        add_help=False,
     )
-    parser.add_argument("args", nargs="*", help="Positional arguments: type summary risk_analysis")
-    parser.add_argument("--type", "-t", dest="type", help="Change type (Feature, Bugfix, Refactor, Critical-Fix, Docs, Perf)")
-    parser.add_argument("--change", "-c", dest="change", help="Summary/description of the change")
+    parser.add_argument(
+        "args", nargs="*", help="Positional arguments: type summary risk_analysis"
+    )
+    parser.add_argument(
+        "--type",
+        "-t",
+        dest="type",
+        help="Change type (Feature, Bugfix, Refactor, Critical-Fix, Docs, Perf)",
+    )
+    parser.add_argument(
+        "--change", "-c", dest="change", help="Summary/description of the change"
+    )
     parser.add_argument("--risk", "-r", dest="risk", help="Risk analysis")
-    parser.add_argument("--help", "-h", action="store_true", help="Show this help message")
+    parser.add_argument(
+        "--dir",
+        "-d",
+        dest="dir",
+        default=None,
+        help="Project directory to search for CHANGELOG (defaults to script's parent directory)",
+    )
+    parser.add_argument(
+        "--help", "-h", action="store_true", help="Show this help message"
+    )
 
     # 先检查是否有 --help
     if "--help" in sys.argv or "-h" in sys.argv:
@@ -214,10 +246,12 @@ def main():
         print("\nPositional usage:")
         print("  python log_change.py Feature 'Your summary' 'Your risk analysis'")
         print("\nFlag usage:")
-        print("  python log_change.py --type Feature --change 'Your summary' --risk 'Your risk analysis'")
+        print(
+            "  python log_change.py --type Feature --change 'Your summary' --risk 'Your risk analysis'"
+        )
         sys.exit(1)
 
-    success = append_log(change_type, summary, risk_analysis)
+    success = append_log(change_type, summary, risk_analysis, args.dir)
     sys.exit(0 if success else 1)
 
 
