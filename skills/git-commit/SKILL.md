@@ -13,47 +13,78 @@ Generates a clean commit with properly formatted message and automatically updat
 /git-commit
 ```
 
-**No manual parameters needed** - the skill automatically analyzes staged changes to determine:
-- **Type**: Feature, Bugfix, Refactor, Critical-Fix, Docs, Perf
-- **Summary**: Brief description of the change
-- **Risk**: Why this change is safe or what to watch out for
+**Required before running**: Stage your code files with `git add <files>`
 
-## Workflow
+## Step 1: Analyze Staged Changes
+Run `git diff --cached --stat` to see what files are staged.
 
-1. **Stage your code files first**: `git add <files>` (do this BEFORE running the skill)
-2. **Run `/git-commit`** - the skill automatically:
-   - Analyzes staged changes
-   - Determines appropriate type, summary, and risk level
-   - Runs `log_change.py` to write entry to `docs/AI_CHANGELOG.md`:
-     - If `docs/AI_CHANGELOG.md` doesn't exist: create it then append entry
-     - If `docs/AI_CHANGELOG.md` exists: **prepend** entry to the **top** of the file
-   - **Only if** log_change.py succeeds:
-     - `git add docs/AI_CHANGELOG.md` (only this file, not other staged files)
-   - Generate commit message from **staged changes** (which is now just AI_CHANGELOG.md)
-   - Create the commit
+### Step 2: Infer Commit Details
+**Automatically determine from the diff:**
 
-## log_change.py Script Usage
+- **Change type**: Infer from file paths and diff content:
+  - `docs/*.md`, `*.md` changes → `Docs`
+  - `cmd/`, `internal/`, `pkg/` with new functionality → `Feature`
+  - `fix`, `bug`, `hotfix` in messages → `Bugfix` or `Critical-Fix`
+  - `refactor`, `rename`, `extract` → `Refactor`
+  - `perf`, `optimize`, `faster` → `Perf`
+  - Default to `Feature` if ambiguous
 
-The script supports TWO formats - use whichever is clearer:
+- **Summary**: Generate from the most meaningful changed files/functions. Focus on *what changed* not *how*.
+
+- **Risk Analysis**: Evaluate:
+  - Scope of changes (small = low risk, wide = higher risk)
+  - Whether critical paths are affected (auth, payment, data)
+  - If tests are included
+  - Breaking API changes
+
+### Step 3: Run log_change.py
+The script auto-detects the project root via git. Run from any subdirectory.
+
+```bash
+python <skill_dir>/scripts/log_change.py <type> <summary> <risk_analysis>
+```
+
+**Example:**
+```bash
+python ~/.claude/skills/git-commit/scripts/log_change.py Feature "Add cursor-based pagination" "Uses efficient composite index, no breaking changes"
+```
+
+### Step 4: Stage AI_CHANGELOG.md
+```bash
+git add docs/AI_CHANGELOG.md
+```
+
+### Step 5: Create Commit WITHOUT Co-Authored-By or Signed-off-by
+Use plain `git commit` (without `-s` or `-a` flags):
+
+```bash
+git commit -m "[Type](scope): Subject
+
+Body explaining the changes in detail.
+
+- Specific key point derived from actual diff
+- Another specific key point from the changes
+- Technical implementation detail from the code
+
+Risk: <risk_analysis from Step 2>"
+```
+
+**⚠️ CRITICAL: Replace placeholder bullets with actual content from the diff. Never use literal placeholders like "Key point 1" - extract specific details from what actually changed.**
+
+**Important**: Do NOT use the Co-Authored-By line or Signed-off-by line. The commit should only contain the message body above.
+
+## log_change.py Script
+
+The script auto-detects project root and finds `docs/AI_CHANGELOG.md`. Supports TWO formats:
 
 ### Format 1: Positional arguments (recommended)
 ```bash
-python skills/git-commit/scripts/log_change.py <type> <summary> <risk_analysis>
+python ~/.claude/skills/git-commit/scripts/log_change.py <type> <summary> <risk_analysis>
 ```
 
 ### Format 2: Flag arguments
 ```bash
-python skills/git-commit/scripts/log_change.py --type <type> --change <summary> --risk <risk_analysis>
-```
-
-**Example (positional):**
-```bash
-python skills/git-commit/scripts/log_change.py Feature "Add cursor-based pagination" "Uses efficient composite index"
-```
-
-**Example (flags):**
-```bash
-python skills/git-commit/scripts/log_change.py --type Feature --change "Add cursor-based pagination" --risk "Uses efficient composite index"
+python ~/.claude/skills/git-commit/scripts/log_change.py --type <type> --change <summary> --risk <risk_analysis>
 ```
 
 **⚠️ VALID types (must match exactly):**
@@ -66,13 +97,6 @@ python skills/git-commit/scripts/log_change.py --type Feature --change "Add curs
 
 **❌ WRONG types (will cause error):**
 - `Fix`, `fix` - Must use `Bugfix`
-
-## Key Behavior
-
-**Important:**
-- AI_CHANGELOG.md is **ONLY staged** if log_change.py successfully writes content to it
-- After staging AI_CHANGELOG.md, **only that file is staged** (original staged files are not included in the commit)
-- Commit message is generated from the staged changes (AI_CHANGELOG.md diff)
 
 ## Available Types
 
@@ -95,40 +119,11 @@ The generated commit follows this format:
 
 Body explaining the changes in detail.
 
-- Key point 1
-- Key point 2
-- Technical details
+- Specific key point from the diff
+- Another specific key point from changes
+- Concrete technical detail from code
+
+Risk: <risk_analysis from Step 2>
 ```
 
-## Documentation Consistency Check
-
-**Trigger**: Runs on every commit that modifies code files (`.go`, `.ts`, `.tsx`, `.js`, `.py`, etc.)
-
-**Check Rules**:
-| Code Changed | Documentation Status     | Action                                                 |
-| ------------ | ------------------------ | ------------------------------------------------------ |
-| `.go` files  | No corresponding docs    | WARN: Consider adding code comments or updating README |
-| API changes  | No proto docs updated    | WARN: API changed but documentation not updated        |
-| New feature  | No feature docs          | WARN: New feature without documentation                |
-| Bug fix      | Related docs not updated | WARN: Bug fixed but docs reflect old behavior          |
-
-**Warning Levels**:
-- **ERROR**: Breaking API changes without documentation
-- **WARN**: New features without documentation updates
-- **INFO**: Code refactoring - documentation still accurate
-
-## Red Flags - STOP and Reconsider
-
-- Ignoring documentation warnings with "I'll update docs later"
-- Committing breaking API changes without documentation
-- Adding new features without considering if docs need updates
-
-## Common Rationalizations
-
-| Excuse                                      | Reality                                    |
-| ------------------------------------------- | ------------------------------------------ |
-| "Small change, no need for changelog"       | Every change should be traceable           |
-| "I'll update docs later"                    | Later = never                              |
-| "This is just a refactor, docs don't apply" | Internal APIs may have public contracts    |
-| "Tests don't need documentation"            | Test structure documents expected behavior |
-| "The code is self-explanatory"              | Future you won't remember                  |
+**⚠️ Never use literal placeholders. Always extract real content from the diff.**

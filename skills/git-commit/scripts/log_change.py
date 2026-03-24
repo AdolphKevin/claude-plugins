@@ -65,12 +65,11 @@ def get_changelog_path(start_dir=None) -> str:
     """获取 CHANGELOG 文件的完整路径
 
     Args:
-        start_dir: 搜索起点目录，默认为脚本所在目录的父目录
+        start_dir: 搜索起点目录，默认为当前工作目录
     """
     if start_dir is None:
-        # 默认使用脚本所在目录的父目录（支持跨项目使用）
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        start_dir = os.path.dirname(script_dir)
+        # 默认使用当前工作目录（确保从用户项目目录开始搜索）
+        start_dir = os.getcwd()
 
     # 首先检查 start_dir
     if os.path.exists(os.path.join(start_dir, CHANGELOG_SUBDIR, CHANGELOG_FILENAME)):
